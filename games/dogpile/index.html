@@ -62,10 +62,11 @@ function buildWalls(){
     wallBodies.forEach(w => Matter.World.remove(world, w));
   }
   const opts = {isStatic:true, friction:0.6, restitution:0.25};
+  // Floor thickness 60px to prevent fast-falling dogs from tunneling through
   wallBodies = [
-    Matter.Bodies.rectangle(CW/2, CH+4,  CW,  10,   opts),  // floor
-    Matter.Bodies.rectangle(-4,   CH/2,  10,  CH*2, opts),  // left wall
-    Matter.Bodies.rectangle(CW+4, CH/2,  10,  CH*2, opts),  // right wall
+    Matter.Bodies.rectangle(CW/2, CH+30,  CW,  60,   opts),  // floor
+    Matter.Bodies.rectangle(-30,  CH/2,   60,  CH*3, opts),  // left wall
+    Matter.Bodies.rectangle(CW+30,CH/2,   60,  CH*3, opts),  // right wall
   ];
   Matter.World.add(world, wallBodies);
 }
@@ -176,7 +177,11 @@ let engine,world,dogBodies=[],score=0,best=0,gameOver=false,cooldown=0;
 let mouseX, nextDog;
 
 function initPhysics(){
-  engine=Engine.create({gravity:{y:1.5}});
+  engine=Engine.create({
+    gravity:{y:1.5},
+    positionIterations:10,
+    velocityIterations:8
+  });
   world=engine.world;
   wallBodies=[];
   buildWalls();
@@ -185,9 +190,11 @@ function initPhysics(){
 function spawnDog(x,type){
   const r=sr(type);
   const b=Matter.Bodies.circle(x, DANGER_Y-r-2, r,{
-    restitution:0.52,friction:0.48,frictionAir:0.013,density:0.003,label:'dog'
+    restitution:0.52,friction:0.48,frictionAir:0.02,density:0.002,label:'dog'
   });
   b.dogType=type;b.merging=false;b.born=Date.now();
+  // Cap initial velocity to prevent tunneling
+  Matter.Body.setVelocity(b,{x:0,y:0});
   Matter.World.add(world,b);dogBodies.push(b);
   return b;
 }
@@ -301,13 +308,22 @@ function restartGame(){
   dogBodies=[];score=0;gameOver=false;cooldown=0;
   document.getElementById('score').textContent='0';
   document.getElementById('msg').textContent='Chạm để thả chó!';
+  resizeCanvas();
   mouseX=CW/2;
   nextDog=randDog();
   initPhysics();
 }
 
 function loop(){
-  if(!gameOver){Engine.update(engine,1000/60);checkMerges();checkLose();if(cooldown>0)cooldown--;}
+  if(!gameOver){
+    Engine.update(engine,1000/60);
+    // Clamp velocity to prevent tunneling through floor
+    for(const b of dogBodies){
+      const spd=Math.sqrt(b.velocity.x*b.velocity.x+b.velocity.y*b.velocity.y);
+      if(spd>25) Matter.Body.setVelocity(b,{x:b.velocity.x*25/spd,y:b.velocity.y*25/spd});
+    }
+    checkMerges();checkLose();if(cooldown>0)cooldown--;
+  }
   drawFrame();requestAnimationFrame(loop);
 }
 
