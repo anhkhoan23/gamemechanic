@@ -7,7 +7,7 @@
     "description_zh": "将狗狗投下，合并相同品种使其进化。机制：合并与物理堆叠。",
     "mechanic": "Merge / Physics",
     "path": "games/dogpile/index.html",
-    "thumb": "",
+    "thumb": "games/dogpile/thumb.jpg",
     "added": "2025-06-09"
   }
 ]
