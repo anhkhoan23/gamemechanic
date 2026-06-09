@@ -27,20 +27,22 @@
   /* ── Header ── */
   header {
     border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
+    padding: 12px 20px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 8px 10px;
     max-width: 960px;
     margin: 0 auto;
   }
 
   .site-logo {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
   }
 
+  /* Top row: logo + title + nav — stays on 1 line always */
   .site-title {
     flex: 1;
     min-width: 0;
@@ -50,17 +52,26 @@
     font-size: 16px;
     font-weight: 700;
     letter-spacing: -0.2px;
-    line-height: 1.1;
+    line-height: 1;
     white-space: nowrap;
   }
 
-  .site-title p {
+  /* Tagline: full-width row below on mobile, inline on desktop */
+  .site-tagline {
+    width: 100%;
     font-size: 11px;
     color: var(--ink-mid);
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
+    padding-left: 42px; /* align under title (logo 32px + gap 10px) */
+    order: 10;
+  }
+
+  @media (min-width: 520px) {
+    .site-tagline {
+      width: auto;
+      flex: 1 1 100%;
+      order: 10;
+    }
   }
 
   nav {
@@ -250,7 +261,6 @@
 
   <div class="site-title">
     <h1>Mini Game Lab</h1>
-    <p id="tagline"></p>
   </div>
 
   <nav>
@@ -267,6 +277,7 @@
       </svg>
     </a>
   </nav>
+  <p class="site-tagline" id="tagline"></p>
 </header>
 
 <main>
