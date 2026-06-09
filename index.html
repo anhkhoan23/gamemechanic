@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mini Game Lab</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Crect x='1' y='1' width='32' height='32' rx='7' fill='%23fdf9f0' stroke='%23c8b89a' stroke-width='1.2'/%3E%3Cpath d='M7 14 Q7 11 10 11 L24 11 Q27 11 27 14 L26 22 Q25.5 24 23 24 L21 24 Q20 22 17 22 Q14 22 13 24 L11 24 Q8.5 24 8 22 Z' fill='%23f5f0e8' stroke='%23c8b89a' stroke-width='1.1' stroke-linejoin='round'/%3E%3Crect x='10.5' y='14.5' width='2.5' height='5.5' rx='.6' fill='%23c8b89a'/%3E%3Crect x='9' y='16' width='5.5' height='2.5' rx='.6' fill='%23c8b89a'/%3E%3Ccircle cx='22' cy='15.5' r='1.1' fill='%23c8b89a'/%3E%3Ccircle cx='24.2' cy='17.5' r='1.1' fill='%23c8b89a'/%3E%3Ccircle cx='22' cy='19.5' r='1.1' fill='%23c8b89a'/%3E%3Ccircle cx='19.8' cy='17.5' r='1.1' fill='%23c8b89a'/%3E%3C/svg%3E">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -42,7 +43,7 @@
     flex-shrink: 0;
   }
 
-  /* Top row: logo + title + nav — stays on 1 line always */
+  /* Title block — grows to fill space between logo and nav */
   .site-title {
     flex: 1;
     min-width: 0;
@@ -56,22 +57,12 @@
     white-space: nowrap;
   }
 
-  /* Tagline: full-width row below on mobile, inline on desktop */
+  /* Tagline sits under h1, wraps freely, never touches nav */
   .site-tagline {
-    width: 100%;
     font-size: 11px;
     color: var(--ink-mid);
     line-height: 1.4;
-    padding-left: 42px; /* align under title (logo 32px + gap 10px) */
-    order: 10;
-  }
-
-  @media (min-width: 520px) {
-    .site-tagline {
-      width: auto;
-      flex: 1 1 100%;
-      order: 10;
-    }
+    margin-top: 3px;
   }
 
   nav {
@@ -261,6 +252,7 @@
 
   <div class="site-title">
     <h1>Mini Game Lab</h1>
+    <p class="site-tagline" id="tagline"></p>
   </div>
 
   <nav>
@@ -277,7 +269,6 @@
       </svg>
     </a>
   </nav>
-  <p class="site-tagline" id="tagline"></p>
 </header>
 
 <main>
