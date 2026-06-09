@@ -3,6 +3,8 @@
     "id": "dogpile",
     "title": "Dogpile",
     "description": "Thả chó xuống, ghép cùng loại để tiến hóa. Mechanic: merge & physics stack.",
+    "description_en": "Drop dogs down, merge matching breeds to evolve them. Mechanic: merge & physics stack.",
+    "description_zh": "将狗狗投下，合并相同品种使其进化。机制：合并与物理堆叠。",
     "mechanic": "Merge / Physics",
     "path": "games/dogpile/index.html",
     "thumb": "",

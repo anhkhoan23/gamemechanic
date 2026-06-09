@@ -27,7 +27,6 @@
     min-height: 100%;
   }
 
-  /* ── Header ── */
   header {
     border-bottom: 1px solid var(--border);
     padding: 20px 24px;
@@ -39,14 +38,12 @@
   }
   header h1 { font-size: 16px; font-weight: 700; }
   header a {
-    margin-left: auto;
     font-size: 12px;
     color: var(--ink-mid);
     text-decoration: none;
   }
   header a:hover { color: var(--ink); }
 
-  /* ── Layout ── */
   main {
     max-width: 760px;
     margin: 0 auto;
@@ -62,16 +59,8 @@
     border-radius: 10px;
     padding: 32px 28px;
   }
-
-  #login-screen h2 {
-    font-size: 18px;
-    margin-bottom: 6px;
-  }
-  #login-screen p {
-    font-size: 12px;
-    color: var(--ink-mid);
-    margin-bottom: 24px;
-  }
+  #login-screen h2 { font-size: 18px; margin-bottom: 6px; }
+  #login-screen p { font-size: 12px; color: var(--ink-mid); margin-bottom: 24px; }
 
   label {
     display: block;
@@ -93,14 +82,14 @@
     outline: none;
     transition: border-color 0.15s;
   }
-  input:focus, textarea:focus, select:focus {
-    border-color: var(--ink-mid);
-  }
+  input:focus, textarea:focus { border-color: var(--ink-mid); }
 
   .form-row { margin-bottom: 16px; }
 
   .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     padding: 9px 18px;
     border-radius: 6px;
     border: 1px solid var(--border);
@@ -111,36 +100,30 @@
     cursor: pointer;
     transition: background 0.12s, border-color 0.12s;
   }
-  .btn:hover { background: var(--cream); border-color: var(--border); }
+  .btn:hover { background: var(--cream); }
   .btn:active { background: #ede4d0; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  .btn-primary {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
+  .btn-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .btn-primary:hover { background: #3d342e; border-color: #3d342e; }
 
-  .btn-danger {
-    color: var(--danger);
-    border-color: #e8b4b0;
-  }
+  .btn-danger { color: var(--danger); border-color: #e8b4b0; }
   .btn-danger:hover { background: #fdf0ef; }
 
-  .btn-small {
-    padding: 5px 10px;
-    font-size: 11px;
-    border-radius: 4px;
-  }
-
-  #login-error {
+  .btn-ai {
+    color: #1a5c9a;
+    border-color: #b8d4f0;
+    background: #f0f6fd;
     font-size: 12px;
-    color: var(--danger);
-    margin-top: 8px;
-    display: none;
+    padding: 6px 12px;
   }
+  .btn-ai:hover { background: #dceefa; }
 
-  /* ── Admin screen ── */
+  .btn-small { padding: 5px 10px; font-size: 11px; border-radius: 4px; }
+
+  #login-error { font-size: 12px; color: var(--danger); margin-top: 8px; display: none; }
+
+  /* ── Admin ── */
   #admin-screen { display: none; }
 
   .section-label {
@@ -153,14 +136,8 @@
     align-items: center;
     gap: 10px;
   }
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border-light);
-  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
 
-  /* ── Add Game Form ── */
   #add-form {
     background: var(--paper);
     border: 1px solid var(--border);
@@ -168,16 +145,41 @@
     padding: 24px;
     margin-bottom: 40px;
   }
-
   #add-form h2 { font-size: 15px; margin-bottom: 20px; font-weight: 600; }
 
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 20px;
-  }
-
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
   .form-row.full { grid-column: 1 / -1; }
+
+  /* Description block with AI translate */
+  .desc-block {
+    grid-column: 1 / -1;
+    background: var(--cream);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .desc-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .desc-block-header span { font-size: 12px; font-weight: 500; color: var(--ink-mid); }
+  .desc-row { display: grid; grid-template-columns: 36px 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .desc-row:last-child { margin-bottom: 0; }
+  .lang-tag {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+  .translate-status {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-left: 4px;
+  }
 
   /* ── Game list ── */
   #game-list { display: flex; flex-direction: column; gap: 10px; }
@@ -191,18 +193,13 @@
     align-items: center;
     gap: 12px;
   }
-
   .game-row-info { flex: 1; min-width: 0; }
   .game-row-title { font-size: 14px; font-weight: 600; }
   .game-row-meta { font-size: 11px; color: var(--ink-mid); margin-top: 2px; }
-
   .game-row-actions { display: flex; gap: 6px; }
 
-  /* ── JSON Output ── */
-  #json-section {
-    margin-top: 40px;
-  }
-
+  /* ── JSON output ── */
+  #json-section { margin-top: 40px; }
   #json-output {
     background: var(--paper);
     border: 1px solid var(--border);
@@ -217,39 +214,8 @@
     max-height: 280px;
     overflow-y: auto;
   }
-
-  .json-actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .copy-hint {
-    font-size: 11px;
-    color: var(--ink-faint);
-  }
-
-  /* ── Toast ── */
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--ink);
-    color: var(--paper);
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 13px;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  #toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+  .json-actions { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+  .copy-hint { font-size: 11px; color: var(--ink-faint); }
 
   /* ── Instructions ── */
   .instructions {
@@ -271,17 +237,33 @@
     color: var(--accent);
   }
 
-  /* ── Logout ── */
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
   #logout-btn {
-    display: none;
+    margin-left: auto;
     font-size: 12px;
     color: var(--ink-mid);
     cursor: pointer;
     background: none;
     border: none;
     font-family: inherit;
-    margin-left: auto;
-    padding: 0;
+    display: none;
   }
   #logout-btn:hover { color: var(--ink); }
 </style>
@@ -294,75 +276,97 @@
     <path d="M7 12h10M12 7v10" stroke="#c8b89a" stroke-width="1.5" stroke-linecap="round"/>
   </svg>
   <h1>Admin · Mini Game Lab</h1>
-  <a href="index.html">← Về trang chủ</a>
-  <button id="logout-btn" onclick="logout()">Đăng xuất</button>
+  <a href="index.html">← Back</a>
+  <button id="logout-btn" onclick="logout()">Log out</button>
 </header>
 
 <main>
-  <!-- ── Login ── -->
+  <!-- Login -->
   <div id="login-screen">
-    <h2>Đăng nhập</h2>
-    <p>Chỉ admin mới được thêm game.</p>
+    <h2>Admin login</h2>
+    <p>Only admins can add or remove games.</p>
     <div class="form-row">
-      <label for="pw-input">Mật khẩu</label>
-      <input type="password" id="pw-input" placeholder="Nhập mật khẩu…"
+      <label for="pw-input">Password</label>
+      <input type="password" id="pw-input" placeholder="Enter password…"
              onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Đăng nhập</button>
-    <div id="login-error">Mật khẩu không đúng.</div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Log in</button>
+    <div id="login-error">Wrong password.</div>
   </div>
 
-  <!-- ── Admin Panel ── -->
+  <!-- Admin panel -->
   <div id="admin-screen">
 
     <div id="add-form">
-      <h2>Thêm game mới</h2>
+      <h2>Add new game</h2>
       <div class="form-grid">
+
         <div class="form-row">
-          <label>Tên game *</label>
+          <label>Game title *</label>
           <input type="text" id="f-title" placeholder="Dogpile">
         </div>
         <div class="form-row">
           <label>Mechanic tag</label>
           <input type="text" id="f-mechanic" placeholder="Merge / Physics">
         </div>
-        <div class="form-row full">
-          <label>Mô tả</label>
-          <input type="text" id="f-desc" placeholder="Thả chó xuống, ghép cùng loại…">
+        <div class="form-row">
+          <label>File path *</label>
+          <input type="text" id="f-path" placeholder="games/game-name/index.html">
         </div>
         <div class="form-row">
-          <label>Đường dẫn file HTML *</label>
-          <input type="text" id="f-path" placeholder="games/tên-game/index.html">
-        </div>
-        <div class="form-row">
-          <label>Thumbnail (URL hoặc để trống)</label>
+          <label>Thumbnail URL (optional)</label>
           <input type="text" id="f-thumb" placeholder="">
         </div>
+
+        <!-- Description block -->
+        <div class="desc-block">
+          <div class="desc-block-header">
+            <span>Description</span>
+            <button class="btn btn-ai" id="translate-btn" onclick="translateDescriptions()">
+              ✦ Auto-translate
+            </button>
+          </div>
+          <div class="desc-row">
+            <span class="lang-tag">VI</span>
+            <input type="text" id="f-desc-vi" placeholder="Mô tả bằng tiếng Việt…">
+          </div>
+          <div class="desc-row">
+            <span class="lang-tag">EN</span>
+            <input type="text" id="f-desc-en" placeholder="English description… (or auto-translate)">
+          </div>
+          <div class="desc-row">
+            <span class="lang-tag">ZH</span>
+            <input type="text" id="f-desc-zh" placeholder="中文描述… (或自动翻译)">
+          </div>
+        </div>
+
       </div>
-      <button class="btn btn-primary" onclick="addGame()">+ Thêm vào danh sách</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="addGame()">+ Add game</button>
+        <span class="translate-status" id="translate-status"></span>
+      </div>
     </div>
 
-    <div class="section-label">Danh sách game</div>
+    <div class="section-label">Game list</div>
     <div id="game-list"></div>
 
     <div id="json-section">
-      <div class="section-label">games.json — commit lên GitHub</div>
+      <div class="section-label">games.json — commit to GitHub</div>
       <div id="json-output"></div>
       <div class="json-actions">
-        <button class="btn btn-small" onclick="copyJSON()">Sao chép JSON</button>
-        <button class="btn btn-small" onclick="downloadJSON()">Tải file</button>
-        <span class="copy-hint">Thay thế file <code>games.json</code> trong repo rồi commit.</span>
+        <button class="btn btn-small" onclick="copyJSON()">Copy JSON</button>
+        <button class="btn btn-small" onclick="downloadJSON()">Download file</button>
+        <span class="copy-hint">Replace <code>games.json</code> in your repo and commit.</span>
       </div>
     </div>
 
     <div class="instructions">
-      <h3>Hướng dẫn thêm game lên GitHub Pages</h3>
+      <h3>How to add a new game</h3>
       <ol>
-        <li>Đặt file game HTML vào thư mục <code>games/tên-game/index.html</code> trong repo.</li>
-        <li>Điền thông tin ở form trên → nhấn <strong>Thêm vào danh sách</strong>.</li>
-        <li>Nhấn <strong>Tải file</strong> để tải <code>games.json</code> mới.</li>
-        <li>Thay thế <code>games.json</code> cũ trong repo bằng file vừa tải.</li>
-        <li>Commit & push lên GitHub — trang chủ sẽ tự cập nhật.</li>
+        <li>Put the game HTML in <code>games/game-name/index.html</code> in the repo.</li>
+        <li>Fill in the form above → click <strong>Add game</strong>.</li>
+        <li>Click <strong>Download file</strong> to get the new <code>games.json</code>.</li>
+        <li>Replace the old <code>games.json</code> in the repo and commit + push.</li>
       </ol>
     </div>
 
@@ -372,23 +376,16 @@
 <div id="toast"></div>
 
 <script>
-  // ─────────────────────────────────────────────
-  // CONFIG — đổi password ở đây
-  // ─────────────────────────────────────────────
+  // ── Config ────────────────────────────────────────────────
   const ADMIN_PASSWORD = 'minigamelab2025';
   const SESSION_KEY    = 'mgl_admin_session';
 
-  // ─────────────────────────────────────────────
-  // State
-  // ─────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────
   let games = [];
 
-  // ─────────────────────────────────────────────
-  // Auth
-  // ─────────────────────────────────────────────
+  // ── Auth ──────────────────────────────────────────────────
   function doLogin() {
-    const val = document.getElementById('pw-input').value;
-    if (val === ADMIN_PASSWORD) {
+    if (document.getElementById('pw-input').value === ADMIN_PASSWORD) {
       sessionStorage.setItem(SESSION_KEY, '1');
       showAdmin();
     } else {
@@ -401,18 +398,16 @@
     sessionStorage.removeItem(SESSION_KEY);
     document.getElementById('admin-screen').style.display = 'none';
     document.getElementById('login-screen').style.display = 'block';
-    document.getElementById('logout-btn').style.display = 'none';
+    document.getElementById('logout-btn').style.display   = 'none';
   }
 
   function showAdmin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
-    document.getElementById('logout-btn').style.display = 'block';
+    document.getElementById('logout-btn').style.display   = 'block';
   }
 
-  // ─────────────────────────────────────────────
-  // Load games.json from repo
-  // ─────────────────────────────────────────────
+  // ── Load games.json ───────────────────────────────────────
   async function loadGames() {
     try {
       const res = await fetch('games.json?v=' + Date.now());
@@ -421,49 +416,91 @@
     renderAll();
   }
 
-  // ─────────────────────────────────────────────
-  // Add / Remove
-  // ─────────────────────────────────────────────
+  // ── AI Auto-translate ─────────────────────────────────────
+  async function translateDescriptions() {
+    const vi = document.getElementById('f-desc-vi').value.trim();
+    if (!vi) { toast('Nhập mô tả tiếng Việt trước.'); return; }
+
+    const btn    = document.getElementById('translate-btn');
+    const status = document.getElementById('translate-status');
+    btn.disabled = true;
+    btn.textContent = '…';
+    status.textContent = 'Translating…';
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 300,
+          messages: [{
+            role: 'user',
+            content: `Translate this Vietnamese game description into English and Simplified Chinese.
+Return ONLY a JSON object with keys "en" and "zh". No markdown, no explanation.
+
+Vietnamese: "${vi}"`
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content.find(b => b.type === 'text')?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const result = JSON.parse(clean);
+
+      document.getElementById('f-desc-en').value = result.en || '';
+      document.getElementById('f-desc-zh').value = result.zh || '';
+      status.textContent = '✓ Done';
+      setTimeout(() => status.textContent = '', 2500);
+    } catch(e) {
+      status.textContent = 'Translation failed.';
+      toast('Lỗi dịch: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '✦ Auto-translate';
+  }
+
+  // ── Add / Remove / Move ───────────────────────────────────
   function addGame() {
     const title    = document.getElementById('f-title').value.trim();
     const mechanic = document.getElementById('f-mechanic').value.trim();
-    const desc     = document.getElementById('f-desc').value.trim();
+    const descVi   = document.getElementById('f-desc-vi').value.trim();
+    const descEn   = document.getElementById('f-desc-en').value.trim();
+    const descZh   = document.getElementById('f-desc-zh').value.trim();
     const path     = document.getElementById('f-path').value.trim();
     const thumb    = document.getElementById('f-thumb').value.trim();
 
-    if (!title || !path) { toast('Vui lòng điền Tên game và Đường dẫn.'); return; }
+    if (!title || !path) { toast('Please fill in Title and File path.'); return; }
 
     const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-
-    if (games.find(g => g.id === id)) {
-      toast('Đã có game với ID "' + id + '". Đổi tên đi nhé.');
-      return;
-    }
+    if (games.find(g => g.id === id)) { toast('ID "' + id + '" already exists.'); return; }
 
     games.push({
       id,
       title,
-      description: desc,
+      description:    descVi || descEn,
+      description_en: descEn,
+      description_zh: descZh,
       mechanic,
       path,
       thumb,
       added: new Date().toISOString().slice(0, 10)
     });
 
-    // Clear form
-    ['f-title','f-mechanic','f-desc','f-path','f-thumb'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
+    ['f-title','f-mechanic','f-desc-vi','f-desc-en','f-desc-zh','f-path','f-thumb']
+      .forEach(id => { document.getElementById(id).value = ''; });
 
     renderAll();
-    toast('Đã thêm "' + title + '"!');
+    toast('Added "' + title + '"!');
   }
 
   function removeGame(id) {
-    if (!confirm('Xóa game "' + id + '" khỏi danh sách?')) return;
+    if (!confirm('Remove "' + id + '" from the list?')) return;
     games = games.filter(g => g.id !== id);
     renderAll();
-    toast('Đã xóa.');
+    toast('Removed.');
   }
 
   function moveGame(id, dir) {
@@ -474,18 +511,13 @@
     renderAll();
   }
 
-  // ─────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────
-  function renderAll() {
-    renderList();
-    renderJSON();
-  }
+  // ── Render ────────────────────────────────────────────────
+  function renderAll() { renderList(); renderJSON(); }
 
   function renderList() {
     const el = document.getElementById('game-list');
     if (!games.length) {
-      el.innerHTML = '<p style="font-size:13px;color:var(--ink-faint);padding:12px 0">Chưa có game nào.</p>';
+      el.innerHTML = '<p style="font-size:13px;color:var(--ink-faint);padding:12px 0">No games yet.</p>';
       return;
     }
     el.innerHTML = games.map((g, i) => `
@@ -497,22 +529,19 @@
         <div class="game-row-actions">
           <button class="btn btn-small" onclick="moveGame('${g.id}', -1)" ${i===0?'disabled':''}>↑</button>
           <button class="btn btn-small" onclick="moveGame('${g.id}', 1)" ${i===games.length-1?'disabled':''}>↓</button>
-          <button class="btn btn-small btn-danger" onclick="removeGame('${g.id}')">Xóa</button>
+          <button class="btn btn-small btn-danger" onclick="removeGame('${g.id}')">Remove</button>
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
   function renderJSON() {
     document.getElementById('json-output').textContent = JSON.stringify(games, null, 2);
   }
 
-  // ─────────────────────────────────────────────
-  // Copy / Download
-  // ─────────────────────────────────────────────
+  // ── Copy / Download ───────────────────────────────────────
   function copyJSON() {
-    const text = JSON.stringify(games, null, 2);
-    navigator.clipboard.writeText(text).then(() => toast('Đã sao chép JSON!'));
+    navigator.clipboard.writeText(JSON.stringify(games, null, 2))
+      .then(() => toast('Copied!'));
   }
 
   function downloadJSON() {
@@ -521,12 +550,10 @@
     a.href = URL.createObjectURL(blob);
     a.download = 'games.json';
     a.click();
-    toast('Đang tải file…');
+    toast('Downloading…');
   }
 
-  // ─────────────────────────────────────────────
-  // Toast
-  // ─────────────────────────────────────────────
+  // ── Toast ─────────────────────────────────────────────────
   let toastTimer;
   function toast(msg) {
     const el = document.getElementById('toast');
@@ -536,12 +563,8 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
   }
 
-  // ─────────────────────────────────────────────
-  // Boot
-  // ─────────────────────────────────────────────
-  if (sessionStorage.getItem(SESSION_KEY) === '1') {
-    showAdmin();
-  }
+  // ── Boot ──────────────────────────────────────────────────
+  if (sessionStorage.getItem(SESSION_KEY) === '1') showAdmin();
   loadGames();
 </script>
 </body>
