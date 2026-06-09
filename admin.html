@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Mini Game Lab</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream:        #f5f0e8;
+    --paper:        #fdf9f0;
+    --ink:          #2a2520;
+    --ink-mid:      #6b6158;
+    --ink-faint:    #b8a898;
+    --border:       #c8b89a;
+    --border-light: #e0d4be;
+    --accent:       #d35400;
+    --danger:       #c0392b;
+    --success:      #1a7a4a;
+  }
+
+  html, body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100%;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  header h1 { font-size: 16px; font-weight: 700; }
+  header a {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--ink-mid);
+    text-decoration: none;
+  }
+  header a:hover { color: var(--ink); }
+
+  /* ── Layout ── */
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* ── Login ── */
+  #login-screen {
+    max-width: 360px;
+    margin: 80px auto 0;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px 28px;
+  }
+
+  #login-screen h2 {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  #login-screen p {
+    font-size: 12px;
+    color: var(--ink-mid);
+    margin-bottom: 24px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-mid);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  input[type="password"], input[type="text"], textarea, select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--paper);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--ink-mid);
+  }
+
+  .form-row { margin-bottom: 16px; }
+
+  .btn {
+    display: inline-block;
+    padding: 9px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .btn:hover { background: var(--cream); border-color: var(--border); }
+  .btn:active { background: #ede4d0; }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .btn-primary:hover { background: #3d342e; border-color: #3d342e; }
+
+  .btn-danger {
+    color: var(--danger);
+    border-color: #e8b4b0;
+  }
+  .btn-danger:hover { background: #fdf0ef; }
+
+  .btn-small {
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+
+  #login-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* ── Admin screen ── */
+  #admin-screen { display: none; }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--ink-faint);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+
+  /* ── Add Game Form ── */
+  #add-form {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+
+  #add-form h2 { font-size: 15px; margin-bottom: 20px; font-weight: 600; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+  }
+
+  .form-row.full { grid-column: 1 / -1; }
+
+  /* ── Game list ── */
+  #game-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .game-row {
+    background: var(--paper);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .game-row-info { flex: 1; min-width: 0; }
+  .game-row-title { font-size: 14px; font-weight: 600; }
+  .game-row-meta { font-size: 11px; color: var(--ink-mid); margin-top: 2px; }
+
+  .game-row-actions { display: flex; gap: 6px; }
+
+  /* ── JSON Output ── */
+  #json-section {
+    margin-top: 40px;
+  }
+
+  #json-output {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--ink-mid);
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.6;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  .json-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .copy-hint {
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Instructions ── */
+  .instructions {
+    margin-top: 40px;
+    background: var(--paper);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 20px 24px;
+  }
+  .instructions h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .instructions ol { padding-left: 20px; }
+  .instructions li { font-size: 12px; color: var(--ink-mid); line-height: 1.8; }
+  .instructions code {
+    font-family: monospace;
+    font-size: 11px;
+    background: var(--cream);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  /* ── Logout ── */
+  #logout-btn {
+    display: none;
+    font-size: 12px;
+    color: var(--ink-mid);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    margin-left: auto;
+    padding: 0;
+  }
+  #logout-btn:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <rect x="2" y="2" width="20" height="20" rx="4" stroke="#c8b89a" stroke-width="1.5"/>
+    <path d="M7 12h10M12 7v10" stroke="#c8b89a" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+  <h1>Admin · Mini Game Lab</h1>
+  <a href="index.html">← Về trang chủ</a>
+  <button id="logout-btn" onclick="logout()">Đăng xuất</button>
+</header>
+
+<main>
+  <!-- ── Login ── -->
+  <div id="login-screen">
+    <h2>Đăng nhập</h2>
+    <p>Chỉ admin mới được thêm game.</p>
+    <div class="form-row">
+      <label for="pw-input">Mật khẩu</label>
+      <input type="password" id="pw-input" placeholder="Nhập mật khẩu…"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Đăng nhập</button>
+    <div id="login-error">Mật khẩu không đúng.</div>
+  </div>
+
+  <!-- ── Admin Panel ── -->
+  <div id="admin-screen">
+
+    <div id="add-form">
+      <h2>Thêm game mới</h2>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Tên game *</label>
+          <input type="text" id="f-title" placeholder="Dogpile">
+        </div>
+        <div class="form-row">
+          <label>Mechanic tag</label>
+          <input type="text" id="f-mechanic" placeholder="Merge / Physics">
+        </div>
+        <div class="form-row full">
+          <label>Mô tả</label>
+          <input type="text" id="f-desc" placeholder="Thả chó xuống, ghép cùng loại…">
+        </div>
+        <div class="form-row">
+          <label>Đường dẫn file HTML *</label>
+          <input type="text" id="f-path" placeholder="games/tên-game/index.html">
+        </div>
+        <div class="form-row">
+          <label>Thumbnail (URL hoặc để trống)</label>
+          <input type="text" id="f-thumb" placeholder="">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addGame()">+ Thêm vào danh sách</button>
+    </div>
+
+    <div class="section-label">Danh sách game</div>
+    <div id="game-list"></div>
+
+    <div id="json-section">
+      <div class="section-label">games.json — commit lên GitHub</div>
+      <div id="json-output"></div>
+      <div class="json-actions">
+        <button class="btn btn-small" onclick="copyJSON()">Sao chép JSON</button>
+        <button class="btn btn-small" onclick="downloadJSON()">Tải file</button>
+        <span class="copy-hint">Thay thế file <code>games.json</code> trong repo rồi commit.</span>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <h3>Hướng dẫn thêm game lên GitHub Pages</h3>
+      <ol>
+        <li>Đặt file game HTML vào thư mục <code>games/tên-game/index.html</code> trong repo.</li>
+        <li>Điền thông tin ở form trên → nhấn <strong>Thêm vào danh sách</strong>.</li>
+        <li>Nhấn <strong>Tải file</strong> để tải <code>games.json</code> mới.</li>
+        <li>Thay thế <code>games.json</code> cũ trong repo bằng file vừa tải.</li>
+        <li>Commit & push lên GitHub — trang chủ sẽ tự cập nhật.</li>
+      </ol>
+    </div>
+
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+  // ─────────────────────────────────────────────
+  // CONFIG — đổi password ở đây
+  // ─────────────────────────────────────────────
+  const ADMIN_PASSWORD = 'minigamelab2025';
+  const SESSION_KEY    = 'mgl_admin_session';
+
+  // ─────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────
+  let games = [];
+
+  // ─────────────────────────────────────────────
+  // Auth
+  // ─────────────────────────────────────────────
+  function doLogin() {
+    const val = document.getElementById('pw-input').value;
+    if (val === ADMIN_PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      showAdmin();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('pw-input').value = '';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('logout-btn').style.display = 'none';
+  }
+
+  function showAdmin() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    document.getElementById('logout-btn').style.display = 'block';
+  }
+
+  // ─────────────────────────────────────────────
+  // Load games.json from repo
+  // ─────────────────────────────────────────────
+  async function loadGames() {
+    try {
+      const res = await fetch('games.json?v=' + Date.now());
+      if (res.ok) games = await res.json();
+    } catch(e) { games = []; }
+    renderAll();
+  }
+
+  // ─────────────────────────────────────────────
+  // Add / Remove
+  // ─────────────────────────────────────────────
+  function addGame() {
+    const title    = document.getElementById('f-title').value.trim();
+    const mechanic = document.getElementById('f-mechanic').value.trim();
+    const desc     = document.getElementById('f-desc').value.trim();
+    const path     = document.getElementById('f-path').value.trim();
+    const thumb    = document.getElementById('f-thumb').value.trim();
+
+    if (!title || !path) { toast('Vui lòng điền Tên game và Đường dẫn.'); return; }
+
+    const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+
+    if (games.find(g => g.id === id)) {
+      toast('Đã có game với ID "' + id + '". Đổi tên đi nhé.');
+      return;
+    }
+
+    games.push({
+      id,
+      title,
+      description: desc,
+      mechanic,
+      path,
+      thumb,
+      added: new Date().toISOString().slice(0, 10)
+    });
+
+    // Clear form
+    ['f-title','f-mechanic','f-desc','f-path','f-thumb'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+
+    renderAll();
+    toast('Đã thêm "' + title + '"!');
+  }
+
+  function removeGame(id) {
+    if (!confirm('Xóa game "' + id + '" khỏi danh sách?')) return;
+    games = games.filter(g => g.id !== id);
+    renderAll();
+    toast('Đã xóa.');
+  }
+
+  function moveGame(id, dir) {
+    const idx = games.findIndex(g => g.id === id);
+    const swp = idx + dir;
+    if (swp < 0 || swp >= games.length) return;
+    [games[idx], games[swp]] = [games[swp], games[idx]];
+    renderAll();
+  }
+
+  // ─────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────
+  function renderAll() {
+    renderList();
+    renderJSON();
+  }
+
+  function renderList() {
+    const el = document.getElementById('game-list');
+    if (!games.length) {
+      el.innerHTML = '<p style="font-size:13px;color:var(--ink-faint);padding:12px 0">Chưa có game nào.</p>';
+      return;
+    }
+    el.innerHTML = games.map((g, i) => `
+      <div class="game-row">
+        <div class="game-row-info">
+          <div class="game-row-title">${g.title}</div>
+          <div class="game-row-meta">${g.path}${g.mechanic ? ' · ' + g.mechanic : ''}</div>
+        </div>
+        <div class="game-row-actions">
+          <button class="btn btn-small" onclick="moveGame('${g.id}', -1)" ${i===0?'disabled':''}>↑</button>
+          <button class="btn btn-small" onclick="moveGame('${g.id}', 1)" ${i===games.length-1?'disabled':''}>↓</button>
+          <button class="btn btn-small btn-danger" onclick="removeGame('${g.id}')">Xóa</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderJSON() {
+    document.getElementById('json-output').textContent = JSON.stringify(games, null, 2);
+  }
+
+  // ─────────────────────────────────────────────
+  // Copy / Download
+  // ─────────────────────────────────────────────
+  function copyJSON() {
+    const text = JSON.stringify(games, null, 2);
+    navigator.clipboard.writeText(text).then(() => toast('Đã sao chép JSON!'));
+  }
+
+  function downloadJSON() {
+    const blob = new Blob([JSON.stringify(games, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'games.json';
+    a.click();
+    toast('Đang tải file…');
+  }
+
+  // ─────────────────────────────────────────────
+  // Toast
+  // ─────────────────────────────────────────────
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  // ─────────────────────────────────────────────
+  // Boot
+  // ─────────────────────────────────────────────
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    showAdmin();
+  }
+  loadGames();
+</script>
+</body>
+</html>

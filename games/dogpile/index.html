@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dogpile</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;touch-action:none;background:#f5f0e8}
+body{display:flex;flex-direction:column;align-items:center;font-family:system-ui,sans-serif;padding:8px;gap:6px}
+
+#ui-top{display:flex;justify-content:space-between;width:100%;max-width:420px;padding:0 4px}
+.stat{font-size:11px;color:#888}
+.stat span{display:block;font-size:24px;font-weight:700;color:#222;line-height:1.1}
+
+#canvasWrap{width:100%;max-width:420px;flex:1;min-height:0;position:relative}
+#gameCanvas{display:block;width:100%;height:100%;border:2px solid #c8b89a;border-radius:10px;background:#fdf9f0;touch-action:none}
+
+#msg{font-size:12px;text-align:center;color:#888;height:16px;width:100%;max-width:420px}
+
+#btns{width:100%;max-width:420px}
+#btns button{width:100%;padding:9px;font-size:13px;border-radius:8px;border:1px solid #c8b89a;background:#fff;color:#333;cursor:pointer;font-family:inherit}
+#btns button:active{background:#f0ead8}
+</style>
+</head>
+<body>
+
+<div id="ui-top">
+  <div class="stat">điểm<span id="score">0</span></div>
+  <div class="stat" style="text-align:right">cao nhất<span id="best">0</span></div>
+</div>
+
+<div id="canvasWrap">
+  <canvas id="gameCanvas"></canvas>
+</div>
+
+<div id="msg">Chạm để thả chó!</div>
+<div id="btns"><button onclick="restartGame()">Chơi lại</button></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+const {Engine,Bodies,Body,World} = Matter;
+
+let CW, CH, DANGER_Y, SCALE;
+let wallBodies = [];
+
+function resizeCanvas(){
+  const wrap = document.getElementById('canvasWrap');
+  const cv   = document.getElementById('gameCanvas');
+  // clientWidth/Height can be 0 if layout hasn't painted yet — fall back to window size
+  CW = wrap.clientWidth  || window.innerWidth;
+  CH = wrap.clientHeight || (window.innerHeight - 120);
+  SCALE    = CW / 340;
+  DANGER_Y = Math.round(65 * SCALE);
+  cv.width  = CW;
+  cv.height = CH;
+}
+
+function buildWalls(){
+  // Remove old walls if any
+  if(wallBodies.length && world){
+    wallBodies.forEach(w => Matter.World.remove(world, w));
+  }
+  const opts = {isStatic:true, friction:0.6, restitution:0.25};
+  wallBodies = [
+    Matter.Bodies.rectangle(CW/2, CH+4,  CW,  10,   opts),  // floor
+    Matter.Bodies.rectangle(-4,   CH/2,  10,  CH*2, opts),  // left wall
+    Matter.Bodies.rectangle(CW+4, CH/2,  10,  CH*2, opts),  // right wall
+  ];
+  Matter.World.add(world, wallBodies);
+}
+
+const SPAWN_POOL=[0,0,0,1,1,1,2,2,3,3,4];
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const DOGS=[
+  {name:'Chihuahua',   r:14, bg:'#FDEBD0',stroke:'#E67E22',spots:['#C0392B'],          ears:'pointy',tail:'up',   textDark:false},
+  {name:'Poodle',      r:18, bg:'#FADBD8',stroke:'#E74C3C',spots:['#D98880'],           ears:'fluffy', tail:'curl',textDark:false},
+  {name:'Dachshund',   r:22, bg:'#FAD7A0',stroke:'#D35400',spots:['#A04000'],           ears:'long',   tail:'up',  textDark:false},
+  {name:'Corgi',       r:26, bg:'#FDEBD0',stroke:'#E67E22',spots:['#CA6F1E'],           ears:'pointy', tail:'stub',textDark:false},
+  {name:'Beagle',      r:30, bg:'#D6EAF8',stroke:'#2E86C1',spots:['#85C1E9','#E59866'],ears:'floppy', tail:'up',  textDark:false},
+  {name:'Bulldog',     r:35, bg:'#D7BDE2',stroke:'#6C3483',spots:['#A569BD'],           ears:'small',  tail:'stub',textDark:false},
+  {name:'Husky',       r:40, bg:'#D1F2EB',stroke:'#148F77',spots:['#A2D9CE','#1A5276'],ears:'pointy', tail:'curl',textDark:false},
+  {name:'Labrador',    r:45, bg:'#FAD7A0',stroke:'#935116',spots:['#CA6F1E'],           ears:'floppy', tail:'up',  textDark:false},
+  {name:'Golden',      r:50, bg:'#FCF3CF',stroke:'#B7950B',spots:['#F9E79F','#D4AC0D'],ears:'floppy', tail:'wave',textDark:false},
+  {name:'Rottweiler',  r:56, bg:'#212121',stroke:'#884EA0',spots:['#CA6F1E','#784212'],  ears:'small',  tail:'stub',textDark:true},
+  {name:'Doberman',    r:62, bg:'#1C1C1C',stroke:'#2E86C1',spots:['#CA6F1E','#E74C3C'],ears:'pointy', tail:'stub',textDark:true},
+  {name:'German Shep.',r:68, bg:'#5D4037',stroke:'#3E2723',spots:['#212121','#D35400'],ears:'pointy', tail:'down',textDark:true},
+  {name:'Saint Bernard',r:76,bg:'#FDEBD0',stroke:'#922B21',spots:['#922B21','#A04000'],ears:'floppy', tail:'down',textDark:false},
+];
+
+function sr(type){ return DOGS[type].r * SCALE; }
+function randDog(){ return SPAWN_POOL[Math.floor(Math.random()*SPAWN_POOL.length)]; }
+
+function drawDog(ctx,x,y,type,extraScale,alpha){
+  extraScale=extraScale||1; alpha=alpha===undefined?1:alpha;
+  const d=DOGS[type], r=sr(type)*extraScale;
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);
+  const bw=r*1.6,bh=r*1.1,headR=r*0.72;
+  ctx.beginPath();ctx.ellipse(0,r*0.42,bw*0.5,bh*0.44,0,0,Math.PI*2);
+  ctx.fillStyle=d.bg;ctx.fill();ctx.lineWidth=Math.max(1,r*0.07);ctx.strokeStyle=d.stroke;ctx.stroke();
+  [[-bw*0.3,r*0.78],[bw*0.3,r*0.78],[-bw*0.14,r*0.86],[bw*0.14,r*0.86]].forEach(([lx,ly])=>{
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(lx-r*0.1,ly,r*0.2,r*0.3,r*0.06);
+    else ctx.rect(lx-r*0.1,ly,r*0.2,r*0.3);
+    ctx.fillStyle=d.bg;ctx.fill();ctx.strokeStyle=d.stroke;ctx.lineWidth=Math.max(1,r*0.05);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(lx,ly+r*0.3+r*0.055,r*0.13,r*0.085,0,0,Math.PI*2);
+    ctx.fillStyle=d.stroke;ctx.fill();
+  });
+  ctx.beginPath();ctx.lineWidth=Math.max(1.5,r*0.1);ctx.strokeStyle=d.stroke;ctx.lineCap='round';
+  if(d.tail==='up'){ctx.moveTo(bw*0.47,r*0.28);ctx.quadraticCurveTo(bw*0.7,r*-0.02,bw*0.54,-r*0.17);}
+  else if(d.tail==='curl'){ctx.moveTo(bw*0.47,r*0.28);ctx.bezierCurveTo(bw*0.8,r*0.08,bw*0.84,-r*0.12,bw*0.64,-r*0.07);}
+  else if(d.tail==='wave'){ctx.moveTo(bw*0.47,r*0.33);ctx.quadraticCurveTo(bw*0.72,r*0.13,bw*0.59,-r*0.06);}
+  else{ctx.moveTo(bw*0.45,r*0.43);ctx.quadraticCurveTo(bw*0.6,r*0.53,bw*0.5,r*0.63);}
+  ctx.stroke();
+  ctx.beginPath();ctx.arc(0,-r*0.26,headR,0,Math.PI*2);
+  ctx.fillStyle=d.bg;ctx.fill();ctx.lineWidth=Math.max(1,r*0.07);ctx.strokeStyle=d.stroke;ctx.stroke();
+  if(type>=9){
+    ctx.beginPath();ctx.ellipse(-headR*0.25,headR*0.08-r*0.26,headR*0.3,headR*0.24,-0.3,0,Math.PI*2);
+    ctx.fillStyle=d.spots[0]+'aa';ctx.fill();
+    ctx.beginPath();ctx.ellipse(headR*0.25,headR*0.08-r*0.26,headR*0.27,headR*0.21,0.3,0,Math.PI*2);
+    ctx.fillStyle=d.spots[0]+'aa';ctx.fill();
+  }else if(d.spots.length>1){
+    ctx.beginPath();ctx.ellipse(0,headR*0.18-r*0.26,headR*0.52,headR*0.32,0,0,Math.PI*2);
+    ctx.fillStyle=d.spots[0]+'55';ctx.fill();
+  }
+  const ec=type>=9?d.spots[0]:d.stroke;
+  const ef=d.spots.length>1&&type<9?d.spots[0]:d.bg;
+  const hy=-r*0.26;
+  if(d.ears==='pointy'){
+    [[-headR*0.5],[headR*0.5]].forEach(([ex],i)=>{
+      const sign=i===0?-1:1;
+      ctx.beginPath();ctx.moveTo(ex,hy-r*0.18);ctx.lineTo(sign*headR*0.78,hy-r*0.84);ctx.lineTo(sign*headR*0.17,hy-r*0.52);ctx.closePath();
+      ctx.fillStyle=d.bg;ctx.fill();ctx.strokeStyle=ec;ctx.lineWidth=Math.max(1,r*0.07);ctx.stroke();
+    });
+  }else if(d.ears==='floppy'){
+    [-headR*0.72,headR*0.72].forEach((ex,i)=>{
+      ctx.beginPath();ctx.ellipse(ex,hy-r*0.2,headR*0.27,headR*0.5,i===0?-0.4:0.4,0,Math.PI*2);
+      ctx.fillStyle=ef;ctx.fill();ctx.strokeStyle=ec;ctx.lineWidth=Math.max(1,r*0.07);ctx.stroke();
+    });
+  }else if(d.ears==='fluffy'){
+    [-headR*0.65,headR*0.65].forEach(ex=>{
+      ctx.beginPath();ctx.arc(ex,hy-r*0.48,headR*0.36,0,Math.PI*2);
+      ctx.fillStyle=d.bg;ctx.fill();ctx.strokeStyle=ec;ctx.lineWidth=Math.max(1,r*0.07);ctx.stroke();
+    });
+  }else{
+    [-headR*0.54,headR*0.54].forEach((ex,i)=>{
+      ctx.beginPath();ctx.ellipse(ex,hy-r*0.32,headR*0.21,headR*0.28,i===0?0.2:-0.2,0,Math.PI*2);
+      ctx.fillStyle=d.bg;ctx.fill();ctx.strokeStyle=ec;ctx.lineWidth=Math.max(1,r*0.07);ctx.stroke();
+    });
+  }
+  const sy=hy+headR*0.3,sw=headR*0.44,sh=headR*0.27;
+  ctx.beginPath();ctx.ellipse(0,sy,sw,sh,0,0,Math.PI*2);
+  ctx.fillStyle=type>=9?'#555':'#f5d5a0';ctx.fill();ctx.strokeStyle=d.stroke;ctx.lineWidth=Math.max(1,r*0.05);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(0,sy-sh*0.3,sw*0.4,sh*0.44,0,0,Math.PI*2);
+  ctx.fillStyle=type>=9?'#222':'#111';ctx.fill();
+  [-sw*0.17,sw*0.17].forEach(nx=>{
+    ctx.beginPath();ctx.arc(nx,sy-sh*0.15,sw*0.09,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fill();
+  });
+  const ey=hy-headR*0.1,er=Math.max(2,headR*0.17);
+  [-headR*0.34,headR*0.34].forEach(ex=>{
+    ctx.beginPath();ctx.arc(ex,ey,er,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    ctx.strokeStyle='#333';ctx.lineWidth=Math.max(0.5,r*0.04);ctx.stroke();
+    ctx.beginPath();ctx.arc(ex+er*0.14,ey+er*0.1,er*0.58,0,Math.PI*2);ctx.fillStyle='#111';ctx.fill();
+    ctx.beginPath();ctx.arc(ex-er*0.1,ey-er*0.2,er*0.2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.7)';ctx.fill();
+  });
+  const lc=d.textDark?'#fff':'#333';
+  ctx.font='bold '+Math.max(8,r*0.37)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillText(RANKS[type],r*0.51+1,r*0.5+1);
+  ctx.fillStyle=lc;ctx.fillText(RANKS[type],r*0.51,r*0.5);
+  ctx.restore();
+}
+
+// ── Game state ────────────────────────────────────────────────────────────────
+let engine,world,dogBodies=[],score=0,best=0,gameOver=false,cooldown=0;
+let mouseX, nextDog;
+
+function initPhysics(){
+  engine=Engine.create({gravity:{y:1.5}});
+  world=engine.world;
+  wallBodies=[];
+  buildWalls();
+}
+
+function spawnDog(x,type){
+  const r=sr(type);
+  const b=Matter.Bodies.circle(x, DANGER_Y-r-2, r,{
+    restitution:0.52,friction:0.48,frictionAir:0.013,density:0.003,label:'dog'
+  });
+  b.dogType=type;b.merging=false;b.born=Date.now();
+  Matter.World.add(world,b);dogBodies.push(b);
+  return b;
+}
+
+function checkMerges(){
+  for(let i=0;i<dogBodies.length;i++){
+    if(dogBodies[i].merging)continue;
+    for(let j=i+1;j<dogBodies.length;j++){
+      if(dogBodies[j].merging)continue;
+      if(dogBodies[i].dogType!==dogBodies[j].dogType)continue;
+      if(Date.now()-dogBodies[i].born<180||Date.now()-dogBodies[j].born<180)continue;
+      const a=dogBodies[i],b=dogBodies[j];
+      const dx=a.position.x-b.position.x,dy=a.position.y-b.position.y;
+      if(Math.sqrt(dx*dx+dy*dy)<sr(a.dogType)+sr(b.dogType)+1){doMerge(a,b);return;}
+    }
+  }
+}
+
+function doMerge(a,b){
+  a.merging=b.merging=true;
+  const mx=(a.position.x+b.position.x)*0.5;
+  const my=(a.position.y+b.position.y)*0.5;
+  const nt=Math.min(a.dogType+1,12);
+  score+=(nt+1)*(nt+1)*10;
+  document.getElementById('score').textContent=score;
+  if(score>best){best=score;document.getElementById('best').textContent=best;}
+  Matter.World.remove(world,a);Matter.World.remove(world,b);
+  dogBodies=dogBodies.filter(d=>d!==a&&d!==b);
+  const nb=Matter.Bodies.circle(mx,my,sr(nt),{
+    restitution:0.52,friction:0.48,frictionAir:0.013,density:0.003,label:'dog'
+  });
+  nb.dogType=nt;nb.merging=false;nb.born=Date.now()+300;
+  Matter.Body.setVelocity(nb,{
+    x:(a.velocity.x+b.velocity.x)*0.35,
+    y:(a.velocity.y+b.velocity.y)*0.35-1.8
+  });
+  Matter.World.add(world,nb);dogBodies.push(nb);
+  if(nt===12) document.getElementById('msg').textContent='🎉 Saint Bernard! Bạn thắng!';
+}
+
+function checkLose(){
+  if(gameOver)return;
+  for(const b of dogBodies){
+    if(Date.now()-b.born>1500&&b.position.y-sr(b.dogType)<DANGER_Y){
+      gameOver=true;
+      document.getElementById('msg').textContent='Tràn ra ngoài! Game over!';
+    }
+  }
+}
+
+const canvas=document.getElementById('gameCanvas');
+const gctx=canvas.getContext('2d');
+
+function clampX(type, x){ return Math.max(sr(type)+6, Math.min(x, CW-sr(type)-6)); }
+
+function drawFrame(){
+  gctx.clearRect(0,0,CW,CH);
+  gctx.fillStyle='#fdf9f0';gctx.fillRect(0,0,CW,CH);
+  gctx.strokeStyle='#d4c9a0';gctx.lineWidth=2;gctx.strokeRect(1,1,CW-2,CH-2);
+  // danger line
+  gctx.strokeStyle='#e8b4b8';gctx.lineWidth=1;gctx.setLineDash([5,5]);
+  gctx.beginPath();gctx.moveTo(4,DANGER_Y);gctx.lineTo(CW-4,DANGER_Y);gctx.stroke();
+  gctx.setLineDash([]);
+  // dogs in world
+  for(const b of dogBodies){
+    gctx.save();gctx.translate(b.position.x,b.position.y);gctx.rotate(b.angle);
+    drawDog(gctx,0,0,b.dogType,1,1);gctx.restore();
+  }
+  // preview
+  if(!gameOver && cooldown<=0){
+    const cx=clampX(nextDog, mouseX);
+    drawDog(gctx,cx,DANGER_Y-sr(nextDog)-4,nextDog,1,0.55);
+    gctx.strokeStyle='rgba(0,0,0,0.12)';gctx.lineWidth=1;gctx.setLineDash([4,4]);
+    gctx.beginPath();gctx.moveTo(cx,DANGER_Y);gctx.lineTo(cx,CH);gctx.stroke();
+    gctx.setLineDash([]);
+  }
+}
+
+function drop(rawX){
+  if(gameOver||cooldown>0)return;
+  const cx=clampX(nextDog, rawX);
+  spawnDog(cx, nextDog);
+  nextDog=randDog();
+  cooldown=18;
+}
+
+// mouse
+canvas.addEventListener('mousemove',e=>{
+  const r=canvas.getBoundingClientRect();
+  mouseX=(e.clientX-r.left)*(CW/r.width);
+});
+canvas.addEventListener('click',e=>{
+  const r=canvas.getBoundingClientRect();
+  drop((e.clientX-r.left)*(CW/r.width));
+});
+
+// touch
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  mouseX=(e.touches[0].clientX-r.left)*(CW/r.width);
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  drop((e.changedTouches[0].clientX-r.left)*(CW/r.width));
+},{passive:false});
+
+function restartGame(){
+  if(engine)Engine.clear(engine);
+  dogBodies=[];score=0;gameOver=false;cooldown=0;
+  document.getElementById('score').textContent='0';
+  document.getElementById('msg').textContent='Chạm để thả chó!';
+  mouseX=CW/2;
+  nextDog=randDog();
+  initPhysics();
+}
+
+function loop(){
+  if(!gameOver){Engine.update(engine,1000/60);checkMerges();checkLose();if(cooldown>0)cooldown--;}
+  drawFrame();requestAnimationFrame(loop);
+}
+
+// boot — wait for layout to paint so clientHeight is valid
+function boot(){
+  resizeCanvas();
+  // If CH is still 0 (layout not ready), retry next frame
+  if(CH < 10){ requestAnimationFrame(boot); return; }
+  mouseX=CW/2;
+  nextDog=randDog();
+  initPhysics();
+  loop();
+}
+requestAnimationFrame(boot);
+</script>
+</body>
+</html>
