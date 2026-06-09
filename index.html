@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,6 +74,34 @@
   }
   nav a:hover { border-color: var(--border); color: var(--ink); }
 
+  /* ── Language switcher ── */
+  .lang-switcher {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .lang-btn {
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .lang-btn:hover { background: var(--cream); color: var(--ink); }
+  .lang-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
   /* ── Main ── */
   main {
     max-width: 960px;
@@ -131,15 +159,6 @@
     justify-content: center;
     position: relative;
     overflow: hidden;
-  }
-
-  .card-thumb iframe {
-    width: 200%;
-    height: 200%;
-    transform: scale(0.5);
-    transform-origin: top left;
-    pointer-events: none;
-    border: none;
   }
 
   .card-thumb-placeholder {
@@ -207,7 +226,6 @@
 <body>
 
 <header>
-  <!-- Pencil-sketch logo -->
   <svg class="site-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="4" y="4" width="40" height="40" rx="8" fill="#fdf9f0" stroke="#c8b89a" stroke-width="1.5"/>
     <rect x="10" y="28" width="10" height="12" rx="1.5" fill="#f5f0e8" stroke="#b8a898" stroke-width="1.2"/>
@@ -217,38 +235,100 @@
   </svg>
   <div class="site-title">
     <h1>Mini Game Lab</h1>
-    <p>Bộ sưu tập game cơ chế nhỏ by Zu and Helen</p>
+    <p id="tagline"></p>
   </div>
   <nav>
-    <a href="admin.html">⚙ Admin</a>
+    <div class="lang-switcher">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">ZH</button>
+      <button class="lang-btn" data-lang="vi" onclick="setLang('vi')">VI</button>
+    </div>
+    <a href="admin.html" id="nav-admin"></a>
   </nav>
 </header>
 
 <main>
-  <div class="section-label">Tất cả game</div>
-  <div id="loading">Đang tải…</div>
+  <div class="section-label" id="section-all"></div>
+  <div id="loading"></div>
   <div id="game-grid" style="display:none"></div>
 </main>
 
-<footer>Mini Game Lab · GitHub Pages</footer>
+<footer id="footer-text"></footer>
 
 <script>
+  // ── Translations ──────────────────────────────────────────
+  const T = {
+    en: {
+      tagline:     'A collection of small game mechanics by Zu and Helen',
+      sectionAll:  'All games',
+      loading:     'Loading…',
+      loadError:   'Could not load games.json.',
+      empty:       'No games yet. Go to Admin to add one.',
+      admin:       '⚙ Admin',
+      footer:      'Mini Game Lab · GitHub Pages',
+    },
+    vi: {
+      tagline:     'Bộ sưu tập game cơ chế nhỏ by Zu and Helen',
+      sectionAll:  'Tất cả game',
+      loading:     'Đang tải…',
+      loadError:   'Không tải được games.json.',
+      empty:       'Chưa có game nào. Vào Admin để thêm.',
+      admin:       '⚙ Admin',
+      footer:      'Mini Game Lab · GitHub Pages',
+    },
+    zh: {
+      tagline:     '小游戏机制合集 by Zu and Helen',
+      sectionAll:  '全部游戏',
+      loading:     '加载中…',
+      loadError:   '无法加载 games.json。',
+      empty:       '暂无游戏。请前往 Admin 添加。',
+      admin:       '⚙ 管理',
+      footer:      'Mini Game Lab · GitHub Pages',
+    },
+  };
+
+  const LANG_KEY = 'mgl_lang';
+  let currentLang = localStorage.getItem(LANG_KEY) || 'en';
+  let cachedGames = [];
+
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem(LANG_KEY, lang);
+    applyLang();
+    if (cachedGames.length) renderGames(cachedGames);
+  }
+
+  function applyLang() {
+    const t = T[currentLang];
+    document.documentElement.lang = currentLang;
+    document.getElementById('tagline').textContent      = t.tagline;
+    document.getElementById('section-all').textContent  = t.sectionAll;
+    document.getElementById('nav-admin').textContent    = t.admin;
+    document.getElementById('footer-text').textContent  = t.footer;
+
+    // Active button
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
+  }
+
+  // ── Games ─────────────────────────────────────────────────
   const GAMES_JSON = 'games.json';
 
   async function loadGames() {
+    document.getElementById('loading').textContent = T[currentLang].loading;
     try {
-      // Cache-bust so updates reflect immediately
       const res = await fetch(GAMES_JSON + '?v=' + Date.now());
       if (!res.ok) throw new Error('not found');
-      const games = await res.json();
-      renderGames(games);
+      cachedGames = await res.json();
+      renderGames(cachedGames);
     } catch(e) {
-      document.getElementById('loading').textContent = 'Không tải được games.json.';
+      document.getElementById('loading').textContent = T[currentLang].loadError;
     }
   }
 
   function renderGames(games) {
-    const grid = document.getElementById('game-grid');
+    const grid    = document.getElementById('game-grid');
     const loading = document.getElementById('loading');
     loading.style.display = 'none';
     grid.style.display = 'grid';
@@ -261,47 +341,49 @@
             <line x1="14" y1="20" x2="26" y2="20" stroke="#b8a898" stroke-width="1.5"/>
             <line x1="20" y1="14" x2="20" y2="26" stroke="#b8a898" stroke-width="1.5"/>
           </svg>
-          <p>Chưa có game nào. Vào Admin để thêm.</p>
+          <p>${T[currentLang].empty}</p>
         </div>`;
       return;
     }
 
-    grid.innerHTML = games.map(g => `
-      <a class="game-card" href="${g.path}" target="_blank">
-        <div class="card-thumb">
-          ${g.thumb
-            ? `<img src="${g.thumb}" style="width:100%;height:100%;object-fit:cover;" alt="${g.title}">`
-            : renderPlaceholder(g)
-          }
-        </div>
-        <div class="card-body">
-          <div class="card-title">${g.title}</div>
-          <div class="card-desc">${g.description}</div>
-          ${g.mechanic ? `<span class="card-tag">${g.mechanic}</span>` : ''}
-        </div>
-      </a>
-    `).join('');
+    grid.innerHTML = games.map(g => {
+      // Pick description by lang, fallback to default description
+      const desc = g['description_' + currentLang] || g.description || '';
+      return `
+        <a class="game-card" href="${g.path}" target="_blank">
+          <div class="card-thumb">
+            ${g.thumb
+              ? `<img src="${g.thumb}" style="width:100%;height:100%;object-fit:cover;" alt="${g.title}">`
+              : renderPlaceholder(g)
+            }
+          </div>
+          <div class="card-body">
+            <div class="card-title">${g.title}</div>
+            <div class="card-desc">${desc}</div>
+            ${g.mechanic ? `<span class="card-tag">${g.mechanic}</span>` : ''}
+          </div>
+        </a>`;
+    }).join('');
   }
 
   function renderPlaceholder(g) {
-    // Deterministic simple SVG thumbnail from title initials
     const initials = g.title.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     return `
       <div class="card-thumb-placeholder">
         <svg viewBox="0 0 120 90" width="120" height="90" xmlns="http://www.w3.org/2000/svg">
           <rect width="120" height="90" fill="#f5f0e8"/>
-          <!-- sketch grid -->
           <line x1="0" y1="30" x2="120" y2="30" stroke="#e0d4be" stroke-width="0.7"/>
           <line x1="0" y1="60" x2="120" y2="60" stroke="#e0d4be" stroke-width="0.7"/>
           <line x1="40" y1="0" x2="40" y2="90" stroke="#e0d4be" stroke-width="0.7"/>
           <line x1="80" y1="0" x2="80" y2="90" stroke="#e0d4be" stroke-width="0.7"/>
-          <!-- initials -->
           <text x="60" y="52" text-anchor="middle" font-family="system-ui" font-size="26"
                 font-weight="700" fill="#c8b89a">${initials}</text>
         </svg>
       </div>`;
   }
 
+  // ── Boot ──────────────────────────────────────────────────
+  applyLang();
   loadGames();
 </script>
 </body>
