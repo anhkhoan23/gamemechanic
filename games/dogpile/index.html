@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,15 +9,9 @@
 html,body{height:100%;overflow:hidden;touch-action:none;background:#f5f0e8}
 body{display:flex;flex-direction:column;align-items:center;font-family:system-ui,sans-serif;padding:8px;gap:6px}
 
-#ui-top{display:flex;justify-content:space-between;width:100%;max-width:420px;padding:0 4px;align-items:flex-start}
+#ui-top{display:flex;justify-content:space-between;width:100%;max-width:420px;padding:0 4px}
 .stat{font-size:11px;color:#888}
 .stat span{display:block;font-size:24px;font-weight:700;color:#222;line-height:1.1}
-
-/* Language switcher */
-#lang-switcher{display:flex;gap:2px;border:1px solid #e0d4be;border-radius:4px;overflow:hidden;background:#fdf9f0;align-self:center}
-.lang-btn{padding:3px 7px;font-size:10px;font-weight:500;color:#888;background:none;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.3px}
-.lang-btn:hover{background:#f5f0e8;color:#444}
-.lang-btn.active{background:#2a2520;color:#fdf9f0}
 
 #canvasWrap{width:100%;max-width:420px;flex:1;min-height:0;position:relative}
 #gameCanvas{display:block;width:100%;height:100%;border:2px solid #c8b89a;border-radius:10px;background:#fdf9f0;touch-action:none}
@@ -27,26 +21,32 @@ body{display:flex;flex-direction:column;align-items:center;font-family:system-ui
 #btns{width:100%;max-width:420px}
 #btns button{width:100%;padding:9px;font-size:13px;border-radius:8px;border:1px solid #c8b89a;background:#fff;color:#333;cursor:pointer;font-family:inherit}
 #btns button:active{background:#f0ead8}
+
+/* Language switcher */
+#lang-switcher{display:flex;gap:2px;border:1px solid #e0d4be;border-radius:4px;overflow:hidden;background:#fdf9f0;align-self:center}
+.lang-btn{padding:3px 7px;font-size:10px;font-weight:500;color:#888;background:none;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.3px}
+.lang-btn:hover{background:#f5f0e8;color:#444}
+.lang-btn.active{background:#2a2520;color:#fdf9f0}
 </style>
 </head>
 <body>
 
 <div id="ui-top">
-  <div class="stat" id="label-score">score<span id="score">0</span></div>
+  <div class="stat" id="label-score">điểm<span id="score">0</span></div>
   <div id="lang-switcher">
-    <button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
     <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">ZH</button>
-    <button class="lang-btn" data-lang="vi" onclick="setLang('vi')">VI</button>
+    <button class="lang-btn active" data-lang="vi" onclick="setLang('vi')">VI</button>
   </div>
-  <div class="stat" style="text-align:right" id="label-best">best<span id="best">0</span></div>
+  <div class="stat" style="text-align:right" id="label-best">cao nhất<span id="best">0</span></div>
 </div>
 
 <div id="canvasWrap">
   <canvas id="gameCanvas"></canvas>
 </div>
 
-<div id="msg"></div>
-<div id="btns"><button id="btn-restart" onclick="restartGame()">Restart</button></div>
+<div id="msg">Chạm để thả chó!</div>
+<div id="btns"><button id="btn-restart" onclick="restartGame()">Chơi lại</button></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <script>
@@ -79,7 +79,7 @@ const T = {
   },
 };
 
-let currentLang = localStorage.getItem(LANG_KEY) || 'en';
+let currentLang = localStorage.getItem(LANG_KEY) || 'vi';
 
 function setLang(lang) {
   currentLang = lang;
@@ -93,21 +93,16 @@ function applyLang() {
   document.getElementById('label-score').childNodes[0].textContent = t.score;
   document.getElementById('label-best').childNodes[0].textContent  = t.best;
   document.getElementById('btn-restart').textContent = t.restart;
-  // Update msg only if game is in idle/hint state (not mid-game message)
-  if (!gameOver) {
-    const msg = document.getElementById('msg').textContent;
-    // If it looks like a hint (not a win/lose), refresh it
-    const allHints = Object.values(T).map(x => x.hint);
-    if (allHints.includes(msg) || msg === '') {
-      document.getElementById('msg').textContent = t.hint;
-    }
+  const allHints = Object.values(T).map(x => x.hint);
+  const msg = document.getElementById('msg').textContent;
+  if (allHints.includes(msg) || msg === '') {
+    document.getElementById('msg').textContent = t.hint;
   }
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === currentLang);
   });
 }
 
-// ── Engine ────────────────────────────────────────────────────────────────────
 const {Engine,Bodies,Body,World} = Matter;
 
 let CW, CH, DANGER_Y, SCALE;
@@ -116,6 +111,7 @@ let wallBodies = [];
 function resizeCanvas(){
   const wrap = document.getElementById('canvasWrap');
   const cv   = document.getElementById('gameCanvas');
+  // clientWidth/Height can be 0 if layout hasn't painted yet — fall back to window size
   CW = wrap.clientWidth  || window.innerWidth;
   CH = wrap.clientHeight || (window.innerHeight - 120);
   SCALE    = CW / 340;
@@ -125,14 +121,16 @@ function resizeCanvas(){
 }
 
 function buildWalls(){
+  // Remove old walls if any
   if(wallBodies.length && world){
     wallBodies.forEach(w => Matter.World.remove(world, w));
   }
   const opts = {isStatic:true, friction:0.6, restitution:0.25};
+  // Floor thickness 60px to prevent fast-falling dogs from tunneling through
   wallBodies = [
-    Matter.Bodies.rectangle(CW/2, CH+4,  CW,  10,   opts),
-    Matter.Bodies.rectangle(-4,   CH/2,  10,  CH*2, opts),
-    Matter.Bodies.rectangle(CW+4, CH/2,  10,  CH*2, opts),
+    Matter.Bodies.rectangle(CW/2, CH+30,  CW,  60,   opts),  // floor
+    Matter.Bodies.rectangle(-30,  CH/2,   60,  CH*3, opts),  // left wall
+    Matter.Bodies.rectangle(CW+30,CH/2,   60,  CH*3, opts),  // right wall
   ];
   Matter.World.add(world, wallBodies);
 }
@@ -243,7 +241,11 @@ let engine,world,dogBodies=[],score=0,best=0,gameOver=false,cooldown=0;
 let mouseX, nextDog;
 
 function initPhysics(){
-  engine=Engine.create({gravity:{y:1.5}});
+  engine=Engine.create({
+    gravity:{y:1.5},
+    positionIterations:10,
+    velocityIterations:8
+  });
   world=engine.world;
   wallBodies=[];
   buildWalls();
@@ -252,9 +254,11 @@ function initPhysics(){
 function spawnDog(x,type){
   const r=sr(type);
   const b=Matter.Bodies.circle(x, DANGER_Y-r-2, r,{
-    restitution:0.52,friction:0.48,frictionAir:0.013,density:0.003,label:'dog'
+    restitution:0.52,friction:0.48,frictionAir:0.02,density:0.002,label:'dog'
   });
   b.dogType=type;b.merging=false;b.born=Date.now();
+  // Cap initial velocity to prevent tunneling
+  Matter.Body.setVelocity(b,{x:0,y:0});
   Matter.World.add(world,b);dogBodies.push(b);
   return b;
 }
@@ -314,13 +318,16 @@ function drawFrame(){
   gctx.clearRect(0,0,CW,CH);
   gctx.fillStyle='#fdf9f0';gctx.fillRect(0,0,CW,CH);
   gctx.strokeStyle='#d4c9a0';gctx.lineWidth=2;gctx.strokeRect(1,1,CW-2,CH-2);
+  // danger line
   gctx.strokeStyle='#e8b4b8';gctx.lineWidth=1;gctx.setLineDash([5,5]);
   gctx.beginPath();gctx.moveTo(4,DANGER_Y);gctx.lineTo(CW-4,DANGER_Y);gctx.stroke();
   gctx.setLineDash([]);
+  // dogs in world
   for(const b of dogBodies){
     gctx.save();gctx.translate(b.position.x,b.position.y);gctx.rotate(b.angle);
     drawDog(gctx,0,0,b.dogType,1,1);gctx.restore();
   }
+  // preview
   if(!gameOver && cooldown<=0){
     const cx=clampX(nextDog, mouseX);
     drawDog(gctx,cx,DANGER_Y-sr(nextDog)-4,nextDog,1,0.55);
@@ -338,6 +345,7 @@ function drop(rawX){
   cooldown=18;
 }
 
+// mouse
 canvas.addEventListener('mousemove',e=>{
   const r=canvas.getBoundingClientRect();
   mouseX=(e.clientX-r.left)*(CW/r.width);
@@ -346,6 +354,8 @@ canvas.addEventListener('click',e=>{
   const r=canvas.getBoundingClientRect();
   drop((e.clientX-r.left)*(CW/r.width));
 });
+
+// touch
 canvas.addEventListener('touchmove',e=>{
   e.preventDefault();
   const r=canvas.getBoundingClientRect();
@@ -362,23 +372,33 @@ function restartGame(){
   dogBodies=[];score=0;gameOver=false;cooldown=0;
   document.getElementById('score').textContent='0';
   document.getElementById('msg').textContent=T[currentLang].hint;
+  resizeCanvas();
   mouseX=CW/2;
   nextDog=randDog();
   initPhysics();
 }
 
 function loop(){
-  if(!gameOver){Engine.update(engine,1000/60);checkMerges();checkLose();if(cooldown>0)cooldown--;}
+  if(!gameOver){
+    Engine.update(engine,1000/60);
+    // Clamp velocity to prevent tunneling through floor
+    for(const b of dogBodies){
+      const spd=Math.sqrt(b.velocity.x*b.velocity.x+b.velocity.y*b.velocity.y);
+      if(spd>25) Matter.Body.setVelocity(b,{x:b.velocity.x*25/spd,y:b.velocity.y*25/spd});
+    }
+    checkMerges();checkLose();if(cooldown>0)cooldown--;
+  }
   drawFrame();requestAnimationFrame(loop);
 }
 
+// boot — wait for layout to paint so clientHeight is valid
 function boot(){
   resizeCanvas();
+  // If CH is still 0 (layout not ready), retry next frame
   if(CH < 10){ requestAnimationFrame(boot); return; }
   mouseX=CW/2;
   nextDog=randDog();
   applyLang();
-  document.getElementById('msg').textContent=T[currentLang].hint;
   initPhysics();
   loop();
 }
