@@ -56,7 +56,7 @@ const T = {
   en: {
     score:   'score',
     best:    'best',
-    hint:    'Tap to drop a dog! Merge to "K" to win!',
+    hint:    'Tap to drop a dog!',
     win:     '🎉 Saint Bernard! You win!',
     lose:    'Overflowed! Game over!',
     restart: 'Restart',
@@ -64,7 +64,7 @@ const T = {
   vi: {
     score:   'điểm',
     best:    'cao nhất',
-    hint:    'Chạm để thả chó!Ghép được chó "K" để chiến thắng!',
+    hint:    'Chạm để thả chó!',
     win:     '🎉 Saint Bernard! Bạn thắng!',
     lose:    'Tràn ra ngoài! Game over!',
     restart: 'Chơi lại',
@@ -72,7 +72,7 @@ const T = {
   zh: {
     score:   '分数',
     best:    '最高',
-    hint:    '点击投放狗狗！合并到"K"即可获胜！',
+    hint:    '点击投放狗狗！',
     win:     '🎉 圣伯纳！你赢了！',
     lose:    '溢出了！游戏结束！',
     restart: '重新开始',
@@ -93,9 +93,8 @@ function applyLang() {
   document.getElementById('label-score').childNodes[0].textContent = t.score;
   document.getElementById('label-best').childNodes[0].textContent  = t.best;
   document.getElementById('btn-restart').textContent = t.restart;
-  const allHints = Object.values(T).map(x => x.hint);
-  const msg = document.getElementById('msg').textContent;
-  if (allHints.includes(msg) || msg === '') {
+  // Always update hint if game is not over
+  if (!gameOver) {
     document.getElementById('msg').textContent = t.hint;
   }
   document.querySelectorAll('.lang-btn').forEach(btn => {
